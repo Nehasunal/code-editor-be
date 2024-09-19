@@ -31,7 +31,7 @@ io.on('connection', (socket) => {
   // Handle incoming code changes from clients
   socket.on('codeChange', (data) => {
     const { room, codeUpdate } = data;
-    console.log(`Code change in room ${room}:`, codeUpdate);
+    console.log(`Code change in room ${room}:`);
     message[room] = codeUpdate
     // Broadcast the code update to all clients in the same room
     io.to(room).emit('codeChange', codeUpdate);
@@ -49,6 +49,13 @@ io.on('connection', (socket) => {
         }
       }
     });
+  });
+
+  // Handle leaving a room
+  socket.on('leaveRoom', (roomName) => {
+    socket.leave(roomName);
+    io.to(roomName).emit('userDisconnected', 'A user has disconnected');
+    console.log(`User left room: ${roomName}`);
   });
 
 });
