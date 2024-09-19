@@ -14,32 +14,43 @@ const io = socketIo(server, {
       }
 });
 
+let message = {}; 
 // WebSocket setup
 io.on('connection', (socket) => {
   console.log('A user connected');
 
   // Handle user joining a room
   socket.on('joinRoom', (room) => {
-    console.log(room,"==>room")
     socket.join(room);
     console.log(`User joined room: ${room}`);
-
+    message[room] = message ? (message[room] ? message[room]: ''): '';
     // Notify the user that they have joined the room
-    socket.emit('joinedRoom', room);
+    socket.emit('joinedRoom', { room, updatedCode: message[room]});
   });
 
   // Handle incoming code changes from clients
   socket.on('codeChange', (data) => {
     const { room, codeUpdate } = data;
     console.log(`Code change in room ${room}:`, codeUpdate);
-
+    message[room] = codeUpdate
     // Broadcast the code update to all clients in the same room
     io.to(room).emit('codeChange', codeUpdate);
   });
 
-  socket.on('disconnect', () => {
-    console.log('A user disconnected');
+  socket.on('disconnecting', () => {
+    const rooms = socket.rooms;
+    rooms.forEach((room) => {
+      if (room !== socket.id) {
+        console.log(`User ${socket.id} is leaving room: ${room}`);
+        const roomInfo = io.sockets.adapter.rooms.get(room);
+        if (roomInfo && roomInfo.size === 1) {
+          console.log(`Room ${room} will be empty after user ${socket.id} leaves`);
+          message[room] = ''
+        }
+      }
+    });
   });
+
 });
 
 // Start server
