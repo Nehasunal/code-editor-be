@@ -18,7 +18,10 @@ let message = {};
 // WebSocket setup
 io.on('connection', (socket) => {
   console.log('A user connected');
-
+  socket.on('ping', () => {
+    console.log('Ping received from client');
+    socket.emit('pong',"ping from backend"); // Emit a 'pong' event back to the client
+  });
   // Handle user joining a room
   socket.on('joinRoom', (room) => {
     socket.join(room);
